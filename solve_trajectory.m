@@ -1,4 +1,4 @@
-function [t, u_list] = solve_trajectory(t_0, u_0, m_p, br, V_e, A_e, p_e, C_d, A)
+function [t, u_list] = solve_trajectory(t_0, u_0, m_p, burn_rate_function, V_e, A_e, p_e, C_d, A, steering_function)
 %solve_trajectory Finds the trajectory with gravity turn
 %   Detailed explanation goes here
 
@@ -14,13 +14,11 @@ function [t, u_list] = solve_trajectory(t_0, u_0, m_p, br, V_e, A_e, p_e, C_d, A
     [t, u_list] = ode45(@(t,u) odefunction(t,u), tspan, u_0);
     
     %% Ode function
-
     function Du = odefunction(t, u)
-        u = u*1.2;
-        V = u(1); 
+        V = u(1);
         gamma = u(2); 
         X = u(3); 
-        H = u(4); 
+        H = u(4);
         m = u(5);
         
         T = thrust(burn_rate(), H);
@@ -28,7 +26,7 @@ function [t, u_list] = solve_trajectory(t_0, u_0, m_p, br, V_e, A_e, p_e, C_d, A
         g = gravity(H);
         
         DV = T/m-D/m-g*sin(gamma);
-        Dgamma = -1/V*(g-V^2/(R_e+H));
+        Dgamma = -1/V*(g-V^2/(R_e+H))*cos(gamma);
         DX = V*cos(gamma);
         DH = V*sin(gamma);
         Dm = - burn_rate();
@@ -37,11 +35,11 @@ function [t, u_list] = solve_trajectory(t_0, u_0, m_p, br, V_e, A_e, p_e, C_d, A
     end
     
     %% Help functions
-    function T = thrust(burn_rate, H)
+    function T = thrust(br, H)
         % global V_e p_e A_e;
         [~,~,p_a ,~] = atmosisa(H);
         
-        T = burn_rate*V_e + (p_e-p_a)*A_e;
+        T = br*V_e + (p_e-p_a)*A_e;
     end
 
     function D = drag(V, H)
