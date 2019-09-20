@@ -8,21 +8,21 @@ g_0 = 9.81;
 C_d_0 = 0.5;
 
 % Stage(m_0, m_p, V_eff, A, C_d)
-stage_1 = Stage(117746, 87710, 2747, (3./2)^2*pi, C_d_0);
-stage_2 = Stage(21503, 18453, 2943, (1.9/2)^2*pi, C_d_0);
+stage_1 = Stage(117746, 87710, 2600, (3./2)^2*pi, C_d_0);
+stage_2 = Stage(21149, 18453, 2943, (1.9/2)^2*pi, C_d_0);
 
 steer_1 = SteeringModule();
 steer_1 = steer_1.set_break_height(10000);
-steer_1 = steer_1.set_constant_burn_rate(797.36);
+steer_1 = steer_1.set_constant_burn_rate(514.3);
 
 steer_2 = SteeringModule();
 steer_2 = steer_2.set_break_at_burnout();
-steer_2 = steer_2.set_constant_burn_rate(797.36);
+steer_2 = steer_2.set_constant_burn_rate(514.3);
 
 steer_3 = SteeringModule();
 steer_3 = steer_3.set_break_at_burnout();
-steer_3 = steer_3.set_constant_burn_rate(92670/397);
-steer_3 = steer_3.set_constant_burn_rate(64.1843*1.5);
+steer_3 = steer_3.set_constant_burn_rate(64.1843*2.5);
+steer_3 = steer_3.set_constant_burn_rate(64.1843*2.5);
 
 steer_4 = SteeringModule();
 steer_4 = steer_4.set_break_after_duration(1000);
@@ -30,7 +30,7 @@ steer_4 = steer_4.set_constant_burn_rate(0);
 
 %% Compute
 % Data allocation for plots
-number_of_trajectories = 4;
+number_of_trajectories = 3;
 trajectories = cell(number_of_trajectories, 2);
 
 % First stage until turn
