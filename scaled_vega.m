@@ -25,12 +25,12 @@ steer_3 = steer_3.set_constant_burn_rate(64.1843*2.5);
 steer_3 = steer_3.set_constant_burn_rate(64.1843*2.5);
 
 steer_4 = SteeringModule();
-steer_4 = steer_4.set_break_after_duration(1000);
+steer_4 = steer_4.set_break_after_duration(10000);
 steer_4 = steer_4.set_constant_burn_rate(0);
 
 %% Compute
 % Data allocation for plots
-number_of_trajectories = 3;
+number_of_trajectories = 4;
 trajectories = cell(number_of_trajectories, 2);
 
 % First stage until turn
