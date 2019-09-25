@@ -1,4 +1,4 @@
-function visualize(number_of_stages, stage_trajectories, legends)
+function visualize(number_of_stages, stage_trajectories, legends, plot_name)
     % visualize Plots the trajectory and velocities of the stages.
     
     subplot(2,1,1)
@@ -32,8 +32,8 @@ function visualize(number_of_stages, stage_trajectories, legends)
     ylabel("V / [km/s]")
     
     subplot(2,1,1)
-    title("Trajectory")
+    title(plot_name)
     legend(legends, 'location', 'northwest', 'fontname', 'CMU Serif')
 
-    print("plot.png", "-dpng", "-r300")
+    print(plot_name+".png", "-dpng", "-r300")
 end

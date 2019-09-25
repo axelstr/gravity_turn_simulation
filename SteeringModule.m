@@ -12,50 +12,77 @@ classdef SteeringModule < handle
     % TODO: Add function that turns at dynamic pressure
     
     properties
-        should_make_initial_turn % If this should make programmed turn when possible
-        programmed_turn_height % Height for programmed turn
-        programmed_turn_angle % How much to turn the vehicle at programmed turn
+        burn_rate_is_constant = false % If the burn rate is constant for this stage
+        constant_burn_rate = 0 % The constant burnrate to use if burn rate is constant
+
+        target_apogee = 0 % The target apogee to reach      
+        max_burn_rate = 0% The maximum available burnrate 
         
-        burn_rate_is_constant = true % If the burn rate is constant for this stage
-        burn_rate_function % The burn_rate_function used to return burn_rate 
-        
-        break_height % The height to break ode solver
-        break_at_burnout % Indicates that break should occur at burnout
-        break_duration % The duration from start until ode break in seconds
+        break_height = 0% The height to break ode solver
+        break_at_burnout = false % Indicates that break should occur at burnout
+        break_duration = 0% The duration from start until ode break in seconds
     end
     
     methods
         % --- Contructor
         function obj = SteeringModule()
-            % SteeringModule Initiates an empty SteeringModule.
-            obj.should_make_initial_turn = false;
-            obj.burn_rate_is_constant = false;
-            obj.burn_rate_function = @(u) 0;
+            obj.break_duration = 0;
         end
         
         % --- Set methods
-        function obj = set_programmed_turn(obj, height, angle)
-            % set_programmed_turn Sets height and angle of programmed turn.
-            obj.should_make_initial_turn = true;
-            obj.programmed_turn_height = height;
-            obj.programmed_turn_angle = angle*pi/180;
-        end
-        
         function obj = set_constant_burn_rate(obj, burn_rate)
             % set_constant_burn_rate Sets a constant burn rate of the
             % engines.
             obj.burn_rate_is_constant = true;
-            obj.burn_rate_function = @(u) burn_rate;
+            obj.constant_burn_rate = burn_rate;
         end
         
-        function obj = set_burn_rate_function(obj, burn_rate_function)
-            % set_burn_rate_function Sets a specific function to find
-            % the burn rate for each instance of u = [V, gamma, X, H, m].
-            obj.burn_rate_is_constant = false;
-            obj.burn_rate_function =  burn_rate_function;
+        function obj = set_target_apogee(obj, height, max_burn_rate)
+            obj.target_apogee = height;
+            obj.max_burn_rate = max_burn_rate;
+        end
+        
+        % --- Steering methods        
+        function rate = burn_rate(obj, u)
+            % get_burn_rate Returns the burn_rate at this instance of u = 
+            % [V, gamma, X, H, m].
+            if obj.burn_rate_is_constant
+                rate = obj.constant_burn_rate;
+            elseif obj.target_apogee > 0
+                rate = obj.burn_rate_to_reach_target_apogee(u);
+            end
+        end
+
+        function rate = burn_rate_to_reach_target_apogee(obj, u)
+            marginal = 10000;
+            e = (obj.target_apogee + marginal - obj.estimated_apogee(u));
+            
+            relative_error = e/(2*marginal);
+            
+            if relative_error >= 1
+                rate = obj.max_burn_rate;
+            elseif relative_error >= 0
+                rate = obj.max_burn_rate*relative_error;
+            else
+                rate = 0;
+            end
+        end
+        
+        function apogee = estimated_apogee(~, u)
+           mu = 3986000E9;
+           R_e = 6371000;
+           V = u(1);
+           gamma = u(2);
+           H = u(4);
+           
+           E_current = V^2/2 - mu*(R_e + H)
+           H_current = (R_e+H)*V*cos(gamma)
+           
+           apogee = (-2*mu+sqrt((2*mu)^2 + 8*E_current*H_current^2)) / (4*E_current)
         end
         
         % --- Break paramters
+        
         function obj = set_break_height(obj, height)
            obj = obj.null_break_properties();
            obj.break_height = height; 
@@ -75,40 +102,6 @@ classdef SteeringModule < handle
            obj.break_duration = 0;
            obj.break_height = 0;
            obj.break_at_burnout = false;
-        end
-        
-        % --- Steering methods        
-        function new_gamma = steer_angle(obj, u)
-            % steer_angle Update gamma if at programmed turn.
-            if obj.should_make_initial_turn
-                if (u(4) >= obj.programmed_turn_height) 
-                    new_gamma = u(2) + obj.programmed_turn_angle;
-                    obj.should_make_initial_turn = false;
-                else
-                    new_gamma = u(2);
-                end
-            else
-                new_gamma = u(2);
-            end
-        end
-        
-        function out = should_turn(obj, u)
-            % should_turn If the turn should be performed in this
-            % itteration step.
-            if obj.should_make_initial_turn
-                if (u(4) >= obj.programmed_turn_height) 
-                    out = true;
-                    obj.should_make_initial_turn = false;
-                    return;
-                end
-            end
-            out = false;
-        end
-        
-        function rate = burn_rate(obj, u)
-            % get_burn_rate Returns the burn_rate at this instance of u = 
-            % [V, gamma, X, H, m].
-            rate = obj.burn_rate_function(u);
         end
     end
 end

@@ -1,4 +1,4 @@
-classdef Stage < handle
+classdef Stage
     %Stage Container of rocket stage paramters
     %   Contais all relevant pysical parameters of the rocket and its
     %   engine that is used to simulate gravity turn.
