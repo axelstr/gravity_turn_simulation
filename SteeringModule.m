@@ -75,7 +75,7 @@ classdef SteeringModule < handle
            gamma = u(2);
            H = u(4);
            
-           E_current = V^2/2 - mu*(R_e + H)
+           E_current = V^2/2 - mu/(R_e + H)
            H_current = (R_e+H)*V*cos(gamma)
            
            apogee = (-2*mu+sqrt((2*mu)^2 + 8*E_current*H_current^2)) / (4*E_current)
