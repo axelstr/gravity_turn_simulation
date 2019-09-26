@@ -23,6 +23,8 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
     %    - Program only support the rocket to turn to the right (negative
     %      programmed turn angle).
     
+    disp("---------------------- Simulation results ---------------")
+    
     %% Fix inputs
     
     programmed_turn_angle = -norm(programmed_turn_angle);
@@ -115,6 +117,8 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
     
     %% Plot and savefig
 
+        disp("--------------------------------------------------------")
+    
     legends = ["First stage", "First stage post turn", "Second stage", "Drift"];
     visualize(number_of_trajectories, trajectories, legends, plot_name);
 
