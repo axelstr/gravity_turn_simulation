@@ -1,4 +1,4 @@
-function [t, u_list, delta_V_array] = solve_trajectory(t_0, u_0, stage, steering_module)
+function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
 %solve_trajectory Finds the gravity turn trajectory of a stage with 
 %   Solves the gravity turn ODE of the given Stage with a corresponding
 %   SteeringModule at specified initial conditions.
@@ -8,23 +8,7 @@ function [t, u_list, delta_V_array] = solve_trajectory(t_0, u_0, stage, steering
     load rho_by_kilometer.mat rho_by_kilometer        
     
     % Timespan
-    %t_span = [t_0, t_0+stage.m_p/steering_module.burn_rate(u_0)];
-    t_span = linspace(t_0, t_0+10000, 10001);
-    
-    % Data allocation 
-    % Delta V contains thrust, gravity drag, air drag delta Vs
-    delta_V_array = cell(3,1);
-    
-% TODO: Make solution for variable burn rate (calculate for large
-% timespan and then find the t range until all propelant has been
-% used) Below is a start.
-
-%     if steering_module.burn_rate_is_constant
-%         t_span = [t_0, t_0+stage.m_p/steering_module.get_burn_rate(u_0)];
-%     else
-%         t_span = [t_0, t_0+1000];
-
-%     end
+    t_span = linspace(t_0, t_0+10000, 10000001);
     
     % Solver
     if steering_module.break_at_burnout
@@ -40,8 +24,10 @@ function [t, u_list, delta_V_array] = solve_trajectory(t_0, u_0, stage, steering
     %% ode45 break functions
     
     function [value, terminate, direction] = break_event_burn_out(t, u)
-        % Terminate if the value is 0 or below 
-        value = (u(5) <= stage.m_0 - stage.m_p)-.5; 
+        % Terminate if the value is 0 or below
+        fuel_left = stage.m_p-(stage.m_0-u(5));
+        relative_fuel_left = fuel_left / stage.m_p;
+        value = (relative_fuel_left <= steering_module.fuel_left_at_separation)-.5; 
         terminate = 1;
         direction  = 0;
     end

@@ -34,16 +34,24 @@ target_altitude = 600000;
 stage_1 = Stage(117746, 87710, 2600, (3./2)^2*pi, 0.5);
 stage_2 = Stage(21149, 18453, 2943, (1.9/2)^2*pi, 0.5);
 
-programmed_turn_height = 10000;
-programmed_turn_angle = -2*pi/180;
+programmed_turn_height = 5000;
+programmed_turn_angle = -5*pi/180;
 burn_rates = [514.3, 514.3, 64.1843]; % First stage before turn, first after turn, max of second stage
+fuel_left_in_first_stage = 0.1; % At separation
 
 %% Compute
 
 drift_duration = 100; % Seconds to plot the second stage in the right orbit.
 plot_name = "template";
 
-simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
+simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_first_stage, ...
         programmed_turn_height, programmed_turn_angle, ...
         target_altitude, ...
         drift_duration, plot_name)
+    
+    
+    
+    
+    
+    
+    

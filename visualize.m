@@ -33,7 +33,7 @@ function visualize(number_of_stages, stage_trajectories, legends, plot_name)
     
     subplot(2,1,1)
     title(plot_name)
-    legend(legends, 'location', 'northwest', 'fontname', 'CMU Serif')
+    legend(legends, 'location', 'southeast', 'fontname', 'CMU Serif')
 
     print(plot_name+".png", "-dpng", "-r300")
 end

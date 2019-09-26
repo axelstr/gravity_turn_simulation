@@ -1,4 +1,4 @@
-function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
+function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_first_stage,...
         programmed_turn_height, programmed_turn_angle, ...
         target_altitude, ...
         drift_duration, plot_name)
@@ -45,7 +45,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
     steer_1_to_programmed_turn = steer_1_to_programmed_turn.set_constant_burn_rate(burn_rates(1));
 
     steer_1_after_programmed_turn = SteeringModule(); % First stage after programmed turn until burnout
-    steer_1_after_programmed_turn = steer_1_after_programmed_turn.set_break_at_burnout();
+    steer_1_after_programmed_turn = steer_1_after_programmed_turn.set_break_at_burnout(fuel_left_in_first_stage);
     steer_1_after_programmed_turn = steer_1_after_programmed_turn.set_constant_burn_rate(burn_rates(2));
 
     % TODO: Warn if target height cant be reached
@@ -63,53 +63,66 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, ...
     number_of_trajectories = 4;
     trajectories = cell(number_of_trajectories, 2);
 
-    % First stage until turn
+    % --- First stage until turn
+    % Initial conditions
     t_0 = 0;
     u_0 = [0.1, 90*pi/180, 0.1, 0.1, stage_1.m_0]';
+    % Simulate
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_1, steer_1_to_programmed_turn); 
+    % Store data
     trajectories(1,:) = {t_list, u_list};
-    % Print information
-    fprintf("Programmed turn (%.1f degrees):\n", programmed_turn_angle*180/pi); 
-    print_state(u_list(end,:))
-    fprintf("\tm_p_left = %.0f kg (%.1f %%)\n", stage_1.m_p-(stage_1.m_0-u_list(end,5)), 100*(stage_1.m_p-(stage_1.m_0-u_list(end,5)))/stage_1.m_p)
     
-    % Turn first stage and simulate gravity turn
+    % --- Turn first stage and simulate gravity turn until burnout (or close to)
+    % Initial conditions, new angle
     t_0 = t_list(end);
     u_0 = u_list(end,:);
-    stage_1_current = stage_1.remove_used_propellant(stage_1.m_0-u_0(5));
     u_0(2) = u_0(2) + programmed_turn_angle;
-    [t_list, u_list] = solve_trajectory(t_0, u_0, stage_1_current, steer_1_after_programmed_turn); 
+    % Print information
+    fprintf("Programmed turn (%.1f degrees):\n", -programmed_turn_angle*180/pi); 
+    print_state(u_0(end,:))
+    fprintf("\tm_p_left = %.0f kg (%.1f %%)\n", stage_1.m_p-(stage_1.m_0-u_list(end,5)), 100*(stage_1.m_p-(stage_1.m_0-u_list(end,5)))/stage_1.m_p)
+    % Simulate
+    [t_list, u_list] = solve_trajectory(t_0, u_0, stage_1, steer_1_after_programmed_turn); 
+    % Store data
     trajectories(2,:) = {t_list, u_list};
     
-    % Separation, simulate stage 2 in gravity turn until burnout
+    % --- Separation, simulate stage 2 in gravity turn until burnout (or close to)
+    % Initial conditions
     t_0 = t_list(end);
     u_0 = u_list(end,:);
     u_0(5) = stage_2.m_0;
-    fprintf("Stage 1 burnout, stage 2 separated:\n");
+    % Print information
+    fprintf("Stage separation:\n");
     print_state(u_0);
+    fprintf("\tm_p_left (stage 1) = %.0f kg (%.2f %%)\n", stage_1.m_p-(stage_1.m_0-u_list(end,5)), 100*(stage_1.m_p-(stage_1.m_0-u_list(end,5)))/stage_1.m_p)
+    % Simulatie
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2, steer_2_reach_target_height); 
+    % Store data
     trajectories(3,:) = {t_list, u_list};
-    
+    % Print information (at max height before burn)
     fprintf("Stage 2 reached target height:\n")
     print_state(u_list(end,:));
     fprintf("\tm_p_left = %.0f kg (%.1f %%)\n", stage_2.m_p-(stage_2.m_0-u_list(end,5)), 100*(stage_2.m_p-(stage_2.m_0-u_list(end,5)))/stage_2.m_p)
-    % Make instant delta V to reach target trajectory
-    v = u_list(end, 1);
+    
+    % --- Delta V to right orbital speed, simulate target orbit after burn
+    % Instant delta V to reach target trajectory
+    V = u_list(end, 1);
     gamma = u_list(end, 2);
-    current_velocity = [v*cos(gamma), v*sin(gamma)];
+    current_velocity = [V*cos(gamma), V*sin(gamma)];
     target_velocity = [sqrt(mu/(target_altitude+R_e)), 0];
-    stage_2_current = stage_2.remove_used_propellant(stage_2.m_0-u_list(end,5));
-    m_p_used = propellant_for_velocity_change(current_velocity, target_velocity, stage_2_current);
-    stage_2_current = stage_2.remove_used_propellant(m_p_used);
+    current_mass = u_list(end,5);
+    m_p_used = propellant_for_velocity_change(current_velocity, target_velocity, current_mass, stage_2.V_eff);
     % Update state
     t_0 = t_list(end);
     u_0 = u_list(end,:);
     u_0(1) = norm(target_velocity);
     u_0(2) = 0;
     u_0(5) = u_0(5)-m_p_used;
-    % Separation, simulate stage 2 drift after burnout
-    [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2_current, steer_2_drift); 
+    % Simulate
+    [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2, steer_2_drift); 
+    % Store data
     trajectories(4,:) = {t_list, u_list};
+    % Print information
     fprintf("Circularize orbit:\n\tdelta_V = %.3f km/s \n\tm_p_burnt = %.0f kg \n", norm(current_velocity-target_velocity)/1000, m_p_used)
     fprintf("Now in correct orbit:\n")
     print_state(u_0)

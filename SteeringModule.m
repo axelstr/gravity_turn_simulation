@@ -20,6 +20,7 @@ classdef SteeringModule < handle
         
         break_height = 0% The height to break ode solver
         break_at_burnout = false % Indicates that break should occur at burnout
+        fuel_left_at_separation = 0 % The relative amount of fuel left in the stage at separation (0-0.1)
         break_duration = 0% The duration from start until ode break in seconds
     end
     
@@ -54,10 +55,11 @@ classdef SteeringModule < handle
         end
 
         function rate = burn_rate_to_reach_target_apogee(obj, u)
-            marginal = 10000;
+            marginal = 1000;
             e = (obj.target_apogee + marginal - obj.estimated_apogee(u));
             
-            relative_error = e/(2*marginal);
+            close_apogee_distance = 10000;
+            relative_error = e/(close_apogee_distance);
             
             if relative_error >= 1
                 rate = obj.max_burn_rate;
@@ -69,16 +71,16 @@ classdef SteeringModule < handle
         end
         
         function apogee = estimated_apogee(~, u)
-           mu = 3986000E9;
+           mu = 398600E9;
            R_e = 6371000;
            V = u(1);
            gamma = u(2);
            H = u(4);
            
-           E_current = V^2/2 - mu*(R_e + H);
+           E_current = V^2/2 - mu/(R_e + H);
            H_current = (R_e+H)*V*cos(gamma);
            
-           apogee = (-2*mu+sqrt((2*mu)^2 + 8*E_current*H_current^2)) / (4*E_current);
+           apogee = (-2*mu-sqrt((2*mu)^2 + 8*E_current*H_current^2)) / (4*E_current);
         end
         
         % --- Break paramters
@@ -88,9 +90,13 @@ classdef SteeringModule < handle
            obj.break_height = height; 
         end
         
-        function obj = set_break_at_burnout(obj)
+        function obj = set_break_at_burnout(obj, fuel_left_at_separation)
+            if nargin < 2
+                fuel_left_at_separation = 0;
+            end
             obj = obj.null_break_properties();
             obj.break_at_burnout = true;
+            obj.fuel_left_at_separation = fuel_left_at_separation;
         end
         
         function obj = set_break_after_duration(obj, dur)
