@@ -55,10 +55,10 @@ classdef SteeringModule < handle
         end
 
         function rate = burn_rate_to_reach_target_apogee(obj, u)
-            marginal = 1000;
+            marginal = 10000;
             e = (obj.target_apogee + marginal - obj.estimated_apogee(u));
             
-            close_apogee_distance = 10000;
+            close_apogee_distance = 50000;
             relative_error = e/(close_apogee_distance);
             
             if relative_error >= 1
