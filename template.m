@@ -37,7 +37,7 @@ stage_2 = Stage(21149, 18453, 2943, (1.9/2)^2*pi, 0.5);
 programmed_turn_height = 5000;
 programmed_turn_angle = -5*pi/180;
 burn_rates = [514.3, 514.3, 64.1843]; % First stage before turn, first after turn, max of second stage
-fuel_left_in_first_stage = 0.1; % At separation
+fuel_left_in_first_stage = 0; % At separation
 
 %% Compute
 

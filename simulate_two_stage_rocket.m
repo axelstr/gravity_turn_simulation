@@ -39,7 +39,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     mu = 398600E9;
     
     %% Construct steering modules
-    
+        
     steer_1_to_programmed_turn = SteeringModule(); % First stage until programmed turn
     steer_1_to_programmed_turn = steer_1_to_programmed_turn.set_break_height(programmed_turn_height);
     steer_1_to_programmed_turn = steer_1_to_programmed_turn.set_constant_burn_rate(burn_rates(1));
@@ -95,7 +95,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     fprintf("Stage separation:\n");
     print_state(u_0);
     fprintf("\tm_p_left (stage 1) = %.0f kg (%.2f %%)\n", stage_1.m_p-(stage_1.m_0-u_list(end,5)), 100*(stage_1.m_p-(stage_1.m_0-u_list(end,5)))/stage_1.m_p)
-    % Simulatie
+    % Simulate
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2, steer_2_reach_target_height); 
     % Store data
     trajectories(3,:) = {t_list, u_list};
