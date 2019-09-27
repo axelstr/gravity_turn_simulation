@@ -45,7 +45,7 @@ fuel_left_in_first_stage = 0.1; % At separation
 %% Compute
 
 drift_duration = 100; % Seconds to plot the second stage in the right orbit.
-plot_name = "template";
+plot_name = "Expendable launch vehicle";
 
 simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_first_stage, ...
         programmed_turn_height, programmed_turn_angle, ...

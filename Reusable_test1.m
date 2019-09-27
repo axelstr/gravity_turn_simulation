@@ -34,18 +34,18 @@ target_altitude = 600000;
 % Vega-rocket.
 
 % Stage(m_0, m_p, V_eff, A, C_d)
-stage_1 = Stage(158785, 87710, 2766, (3./2)^2*pi, 0.5);
-stage_2 = Stage(47438, 41838, 4149, (1.9/2)^2*pi, 0.5);
+stage_1 = Stage(152728, 87710, 2766, (3./2)^2*pi, 0.5);
+stage_2 = Stage(47438, 41838, 4155, (1.9/2)^2*pi, 0.5);
 
 programmed_turn_height = 5000;
 programmed_turn_angle = -5*pi/180;
-burn_rates = [670, 670, 110]; % First stage before turn, first after turn, max of second stage
+burn_rates = [770, 770, 110]; % First stage before turn, first after turn, max of second stage
 fuel_left_in_first_stage = 0.1; % At separation
 
 %% Compute
 
 drift_duration = 100; % Seconds to plot the second stage in the right orbit.
-plot_name = "template";
+plot_name = "Reusable launch vehicle";
 
 simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_first_stage, ...
         programmed_turn_height, programmed_turn_angle, ...
