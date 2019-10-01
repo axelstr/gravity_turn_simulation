@@ -8,12 +8,14 @@ function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
     load rho_by_kilometer.mat rho_by_kilometer        
     
     % Timespan
-    t_span = linspace(t_0, t_0+10000, 10000001);
-    
+%    t_span = linspace(t_0, t_0+10000, 10000001);
+    t_span = linspace(t_0, t_0+10000, 100001);
+
+
     % Solver
     if steering_module.break_at_burnout
         ode_option = odeset('Events', @break_event_burn_out);
-    elseif steering_module.break_height > 0
+    elseif steering_module.break_above_height == true || steering_module.break_below_height == true
         ode_option = odeset('Events', @break_event_height);
     elseif steering_module.break_duration > 0
         ode_option = odeset('Events', @break_event_duration);
@@ -34,7 +36,11 @@ function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
 
     function [value, terminate, direction] = break_event_height(t, u)
         % Terminate if the value is 0 or below 
-        value = (u(4) <= steering_module.break_height)-.5; 
+        if steering_module.break_above_height
+            value = (u(4) <= steering_module.break_height)-.5; 
+        else 
+            value = (u(4) >= steering_module.break_height)-.5; 
+        end
         terminate = 1;
         direction  = 0;
     end
@@ -42,7 +48,7 @@ function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
     function [value, terminate, direction] = break_event_duration(t, u)
         current_duration = t - t_0;
         % Terminate if the value is 0 or below 
-        value = (current_duration >= steering_module.break_duration)-.5; 
+        value = (current_duration >= steering_module.break_duration)-.5;
         terminate = 1;
         direction  = 0;
     end

@@ -19,6 +19,8 @@ classdef SteeringModule < handle
         max_burn_rate = 0% The maximum available burnrate 
         
         break_height = 0% The height to break ode solver
+        break_below_height = false % Break below specified height
+        break_above_height = false % Break above specified height
         break_at_burnout = false % Indicates that break should occur at burnout
         fuel_left_at_separation = 0 % The relative amount of fuel left in the stage at separation (0-0.1)
         break_duration = 0% The duration from start until ode break in seconds
@@ -88,6 +90,13 @@ classdef SteeringModule < handle
         function obj = set_break_height(obj, height)
            obj = obj.null_break_properties();
            obj.break_height = height; 
+           obj.break_above_height = true;
+        end
+        
+        function obj = set_break_below_height(obj, height)
+           obj = obj.null_break_properties();
+           obj.break_height = height; 
+           obj.break_below_height = true;
         end
         
         function obj = set_break_at_burnout(obj, fuel_left_at_separation)
@@ -105,9 +114,12 @@ classdef SteeringModule < handle
         end
         
         function obj = null_break_properties(obj)
-           obj.break_duration = 0;
-           obj.break_height = 0;
-           obj.break_at_burnout = false;
+            obj.break_duration = 0;
+            obj.break_height = 0;
+            obj.break_below_height = false; 
+            obj.break_above_height = false; 
+            obj.break_at_burnout = false; 
+            obj.fuel_left_at_separation = 0;
         end
     end
 end
