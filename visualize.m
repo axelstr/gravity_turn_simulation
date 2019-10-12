@@ -25,7 +25,7 @@ function visualize_animation(number_of_stages, trajectories, legends, plot_name)
         204, 51, 255; % Payload
         0, 0, 0]/256; % Target
     linestyles = ["-", "-", "-", "-", "-", "--"];
-    linewidths = [1,1,1,1,1,.5]*default_line_width;
+    linewidths = [1.5,1.5,1.5,1.5,1.5,.5]*default_line_width;
     
     
     for n = 1:number_of_stages
@@ -51,7 +51,7 @@ function visualize_animation(number_of_stages, trajectories, legends, plot_name)
     title(plot_name, 'FontSize', fontsize_big)
     l = legend(legends, 'location', 'northeast', 'fontname', 'CMU Serif', 'FontSize', fontsize_small);
 
-    print(plot_name+".png", "-dpng", "-r300")
+    print(strrep(plot_name," ","_")+".png", "-dpng", "-r300")
     
     %% First stage trajectory 
     
@@ -111,10 +111,46 @@ function visualize_animation(number_of_stages, trajectories, legends, plot_name)
     subplot(2,1,2)
     axis([0 max(t_list) 0 max(u_list(:,1))/1000])
 
-    print(plot_name_first_stage+".png", "-dpng", "-r300")
+    print(strrep(plot_name_first_stage," ","_")+".png", "-dpng", "-r300")
     
     %% Delta V plot
     
+    figure(3)
+    hold on
+    grid on
+    deltaV_title = plot_name + ' - accumulative $\Delta V$';
+    title(deltaV_title, 'fontsize', fontsize_big)
+    plot([0, 0], [0,0], 'color', 'k', 'linewidth', 1, 'linestyle', "-")
+    plot([0, 0], [0,0], 'color', 'k', 'linewidth', 1, 'linestyle', "--")
+    plot([0, 0], [0,0], 'color', 'k', 'linewidth', 1, 'linestyle', ":")
+    xlabel("t / [s]", 'FontSize', fontsize_small)
+    ylabel("V / [km/s]", 'FontSize', fontsize_small)
+    
+    delta_v_legends = ["$\Delta V_{\textrm{thrust}}$", "$\Delta V_{\textrm{drag}}$", "$\Delta V_{\textrm{gravity}}$", legends];
+ 
+    for n = 1:number_of_stages-1
+        t_list = trajectories{n,1};
+        u_list = trajectories{n,2};
+        deltaV_thrust = u_list(:,6);
+        deltaV_drag = u_list(:,7);
+        deltaV_grav = u_list(:,8);
+        plot(t_list, deltaV_thrust/1000, "linewidth", 1.5, "color", colors(n,:), "linestyle", "-");
+    end
+    
+    legend(delta_v_legends, 'location', 'eastoutside', 'interpreter', 'latex')
+    
+    for n = 1:number_of_stages-1
+        t_list = trajectories{n,1};
+        u_list = trajectories{n,2};
+        deltaV_thrust = u_list(:,6);
+        deltaV_drag = u_list(:,7);
+        deltaV_grav = u_list(:,8);
+        plot(t_list, deltaV_drag/1000, "linewidth", 1.5, "color", colors(n,:), "linestyle", "--", 'HandleVisibility','off');
+        plot(t_list, deltaV_grav/1000, "linewidth", 2, "color", colors(n,:), "linestyle", ":", 'HandleVisibility','off');
+    end
+    
+    deltaV_plot_name = plot_name + " - delta V";
+    print(strrep(deltaV_plot_name," ","_")+".png", "-dpng", "-r300")
     
     
 end

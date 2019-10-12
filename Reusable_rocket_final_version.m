@@ -52,7 +52,7 @@ burn_rates = [730, 730, 110]; % First stage before turn, first after turn, max o
 
 %% Compute
 
-drift_duration = 300; % Seconds to plot the payload in the right orbit.
+drift_duration = 2000; % Seconds to plot the payload in the right orbit.
     plot_name = "Reusable launch vehicle";
 
 simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_first_stage, ...

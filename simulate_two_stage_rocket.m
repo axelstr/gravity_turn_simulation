@@ -59,7 +59,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     steer_2_reach_target_height = steer_2_reach_target_height.set_target_apogee(target_altitude+R_e, burn_rates(3)); %(taget_apogee, max_burn_rate) 
 
     steer_2_drift = SteeringModule(); % Drift of second stage
-    steer_2_drift = steer_2_drift.set_break_after_duration(50);
+    steer_2_drift = steer_2_drift.set_break_after_duration(100);
     steer_2_drift = steer_2_drift.set_constant_burn_rate(0);
 
     steer_3_payload_orbit = SteeringModule(); % Drift of second stage
@@ -78,7 +78,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     % --- First stage until turn
     % Initial conditions
     t_0 = 0;
-    u_0 = [0.1, 90*pi/180, 0.1, 0.1, stage_1.m_0]';
+    u_0 = [0.1, 90*pi/180, 0.1, 0.1, stage_1.m_0, 0, 0, 0]';
     % Simulate
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_1, steer_1_to_programmed_turn); 
     t_list_first_stage = t_list;
@@ -131,7 +131,8 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     V = u_list(end, 1);
     gamma = u_list(end, 2);
     current_velocity = [V*cos(gamma), V*sin(gamma)];
-    target_velocity = [sqrt(mu/(target_altitude+R_e)), 0];
+    target_velocity = [sqrt(g_0*R_e^2/(R_e+target_altitude)), 0];
+    %target_velocity = [sqrt(mu/(target_altitude+R_e)), 0];
     current_mass = u_list(end,5);
     m_p_used = propellant_for_velocity_change(current_velocity, target_velocity, current_mass, stage_2.V_eff);
     % Update state
@@ -140,6 +141,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     u_0(1) = norm(target_velocity);
     u_0(2) = 0;
     u_0(5) = u_0(5)-m_p_used;
+    u_0(6) = u_0(6) + norm(target_velocity-current_velocity);
     % Simulate
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2, steer_2_drift); 
     % Store data
@@ -190,6 +192,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
         u_rest(2) = 90*pi/180;
         u_rest(4) = 0;
         u_rest(5) = u_rest(5) - m_p_used;
+        u_rest(6) = u_rest(6) + norm(target_velocity-current_velocity);
         u_list = [u_list; u_rest];
         % Print information
         disp("First stage landing burn:")
@@ -226,6 +229,7 @@ function simulate_two_stage_rocket(stage_1, stage_2, burn_rates, fuel_left_in_fi
     m_p_used = propellant_for_velocity_change(current_velocity, target_velocity, current_mass, stage_2.V_eff);
     u_0(1) = norm(target_velocity);
     u_0(5) = u_0(5)-m_p_used;
+    u_0(6) = u_0(6)+norm(target_velocity-current_velocity);
     % Simulate
     [t_list, u_list] = solve_trajectory(t_0, u_0, stage_2_reentry, steer_2_reentry); 
     % Store data

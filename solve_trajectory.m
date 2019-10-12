@@ -10,6 +10,7 @@ function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
     % Timespan
 %    t_span = linspace(t_0, t_0+10000, 10000001);
     t_span = linspace(t_0, t_0+10000, 100001);
+    dt = (t_span(end)-t_span(1))/length(t_span);
 
 
     % Solver
@@ -72,7 +73,11 @@ function [t, u_list] = solve_trajectory(t_0, u_0, stage, steering_module)
         DH = V*sin(gamma);
         Dm = - current_burn_rate;
         
-        Du = [DV, Dgamma, DX, DH, Dm]';
+        DdeltaV_thrust = T/m;
+        DdeltaV_drag = D/m;
+        DdeltaV_grav = norm(g*sin(gamma)); % TODO: ändra till något i stil med (g-V^2/(R_e+H))
+        
+        Du = [DV, Dgamma, DX, DH, Dm, DdeltaV_thrust, DdeltaV_drag, DdeltaV_grav]';
     end
     
     %% Help functions
